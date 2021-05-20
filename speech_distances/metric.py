@@ -10,20 +10,15 @@ class Metric(ABC):
     that are used in this project. 
     Child classes must implement all the methods with @abstractmethod decorator.
     """
-    def __init__(self, model: str, dataset: str):
-        self.model = load_model(model)
-        self.dataset = load_dataset(dataset)
+    def __init__(self, path: str, **kwargs):
+        """
+        Args:
+            path (str): path to wav files to be assessed
+        """
+        self.path = path
+        for k in kwargs.keys():
+            setattr(self, k, kwargs[k])
         
-    @classmethod
-    @abstractmethod 
-    def list_available_models(cls):
-        pass
-    
-    @classmethod
-    @abstractmethod 
-    def list_available_datasets(cls):
-        pass
-    
     @abstractmethod
-    def calculate(self):
+    def calculate_metric(self):
         pass
