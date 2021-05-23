@@ -21,4 +21,6 @@ def load_model(name: str, device="cpu"):
             wget.download("https://github.com/SeanNaren/deepspeech.pytorch/releases/download/v2.0/an4_pretrained_v2.pth",
                           out="weights")
             return DeepSpeechEncoderWrapper("weights/an4_pretrained_v2.pth", device=device)
+    else:
+        raise NotImplementedError
             

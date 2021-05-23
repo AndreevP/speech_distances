@@ -331,10 +331,12 @@ class DeepSpeech(nn.Module):
 
 
 class DeepSpeechEncoder(DeepSpeech):
-    def forward(self, x):
-        lengths = torch.tensor([x.size(3)] * x.size(0)).cpu().int()
+    
+    def forward(self, audio_signal, length=None):
+        audio_signal = audio_signal.view(audio_signal.size(0), 1, audio_signal.size(1), audio_signal.size(2))
+        lengths = torch.tensor([audio_signal.size(3)] * audio_signal.size(0)).cpu().int()
         output_lengths = self.get_seq_lens(lengths)
-        x, _ = self.conv(x, output_lengths)
+        x, _ = self.conv(audio_signal, output_lengths)
 
         sizes = x.size()
         x = x.view(sizes[0], sizes[1] * sizes[2], sizes[3])
@@ -371,21 +373,50 @@ class DeepSpeechEncoder(DeepSpeech):
         return model
 
 
+class DeepSpeechInputFeatureExtractor(nn.Module):
+    _sample_rate = 16000
+    
+    def __init__(self, n_fft=320,
+                 w_len=320,
+                 h_len=160,
+                 normalize=True,
+                 eps=1e-12):
+        
+        super().__init__()
+        
+        self.n_fft = n_fft
+        self.w_len = w_len
+        self.h_len = h_len
+        self.normalize = normalize
+        self.eps = eps
+    
+    def forward(self, input_signal, length=None):
+        w = torch.hann_window(window_length=self.w_len, device=input_signal.device)
+        f = torch.stft(
+            input_signal, n_fft=self.n_fft, hop_length=self.h_len, win_length=self.w_len, window=w,
+        )
+        spects = torch.clamp((f ** 2).sum(dim=-1), min=self.eps).sqrt()
+        spects = torch.log1p(spects)
+        if self.normalize:
+            mean = spects.mean(dim=[1, 2], keepdim=True)
+            std = spects.std(dim=[1, 2], keepdim=True)
+            spects = (spects - mean) / (std + self.eps)
+        return spects, torch.LongTensor([spects.size(-1)] * spects.size(0))
+    
+    
 class DeepSpeechEncoderWrapper:
     """
-    Apply torch-based DeepSpeech2 model
-    (https://github.com/SeanNaren/deepspeech.pytorch)
-    in __call__ for computing deep features for input signal samples.
+    Provides similar interface as NeMo models
     """
     # sampling rate which is required for input signals
     REQUIRED_SR = 16_000
 
     def __init__(self, checkpoint_path, device="cuda"):
-        self.model = DeepSpeechEncoder.load_model(checkpoint_path)
-        self.model.eval()
-        self.model = self.model.to(device)
-
+        self.encoder = DeepSpeechEncoder.load_model(checkpoint_path)
+        self.encoder.eval()
+        self.encoder = self.encoder.to(device)
+        self.preprocessor = DeepSpeechInputFeatureExtractor()
 
     def __call__(self, x):
-        x = x.view(x.size(0), 1, x.size(1), x.size(2))
-        return self.model(x)
+        x, l = self.preprocessor(x)
+        return self.encoder(x)
