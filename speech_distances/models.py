@@ -12,6 +12,22 @@ def load_model(name: str, device="cpu"):
     elif name.lower() == 'quartznet':
         import nemo.collections.asr as nemo_asr
         return nemo_asr.models.EncDecCTCModel.from_pretrained(model_name="QuartzNet15x5Base-En", map_location=device)
+    elif name.lower() == 'speakerverification_speakernet':
+        import nemo.collections.asr as nemo_asr
+        stt = nemo_asr.models.EncDecSpeakerLabelModel.from_pretrained(model_name="speakerverification_speakernet", map_location=device)
+        return stt
+    elif name.lower() == 'speakerrecognition_speakernet':
+        import nemo.collections.asr as nemo_asr
+        stt = nemo_asr.models.EncDecSpeakerLabelModel.from_pretrained(model_name="speakerrecognition_speakernet", map_location=device)
+        return stt
+    elif name.lower() == 'jasper':
+        import nemo.collections.asr as nemo_asr
+        stt = nemo_asr.models.ASRModel.from_pretrained(model_name="stt_en_jasper10x5dr")
+        return stt
+    elif name.lower() == 'quartznet_de':
+        import nemo.collections.asr as nemo_asr
+        stt = nemo_asr.models.ASRModel.from_pretrained(model_name="stt_de_quartznet15x5")
+        return stt
     elif name.lower() == 'deepspeech2':
         from .deep_speech import DeepSpeechEncoderWrapper
         if os.path.isfile('weights/an4_pretrained_v2.pth'):
@@ -23,4 +39,9 @@ def load_model(name: str, device="cpu"):
             return DeepSpeechEncoderWrapper("weights/an4_pretrained_v2.pth", device=device)
     else:
         raise NotImplementedError
+
+## Todo: wav2vec
+        
+# nvidia-nemo TTS+vocoder-inference example: 
+# https://colab.research.google.com/github/NVIDIA/NeMo/blob/main/tutorials/tts/1_TTS_inference.ipynb#scrollTo=46eLhKnTPXS9
             
