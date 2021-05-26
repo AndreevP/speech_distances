@@ -349,7 +349,7 @@ class DeepSpeechEncoder(DeepSpeech):
                 not self.bidirectional
         ):  # no need for lookahead layer in bidirectional
             x = self.lookahead(x)
-        return x
+        return x.transpose(-1, -2), length
 
     @classmethod
     def load_model(cls, path):
