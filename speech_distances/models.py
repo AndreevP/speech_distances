@@ -21,6 +21,12 @@ def load_model(name: str, device="cpu"):
             wget.download("https://github.com/SeanNaren/deepspeech.pytorch/releases/download/v2.0/an4_pretrained_v2.pth",
                           out="weights")
             return DeepSpeechEncoderWrapper("weights/an4_pretrained_v2.pth", device=device)
+    elif name.lower() == 'wav2vec2':
+        from .wav2vec2 import Wav2Vec2FullEncoder
+        return Wav2Vec2FullEncoder(device)
+    elif name.lower() == 'wav2vec2_conv':
+        from .wav2vec2 import Wav2Vec2ConvEncoder
+        return Wav2Vec2ConvEncoder(device)
     else:
         raise NotImplementedError
             

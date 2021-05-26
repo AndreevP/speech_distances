@@ -28,8 +28,8 @@ class DistributionalMetric(Metric):
             conditional (bool, optional): Defines whether to compute conditional version of the distance of not. Defaults to True.
             use_cached (bool, optional): Try to reuse extracted features if possible?. Defaults to True.
         """
-        
-        assert window_size%160==0, "STFT step size is assumed to be equal to 160"
+        if window_size != None:
+            assert window_size%160==0, "STFT step size is assumed to be equal to 160"
         
         backbone_name = backbone
         backbone = load_model(backbone, "cuda")
@@ -52,26 +52,37 @@ class DistributionalMetric(Metric):
         Returns:
             extracted features (torch.tensor)
         """
-        path_to_features = os.path.isfile(os.path.join(path, self.backbone_name + "_features"))
+        path_to_features = os.path.join(path, self.backbone_name + f"window{self.window_size}" + "_features")
         
         if os.path.isfile(path_to_features) and use_cached:
             return torch.load(path_to_features)
             
         required_sr = self.backbone.preprocessor._sample_rate
+        resample = torchaudio.transforms.Resample(orig_freq=self.sr, new_freq=required_sr)
         files = sorted(glob.glob(os.path.join(path, "*.wav")))
         
         features = []
         for file in tqdm.tqdm(files, desc="Extracting features..."):
             wav, sr = torchaudio.load(file)
-            wav = torchaudio.transforms.Resample(orig_freq=sr, new_freq=required_sr)(wav)
-            wav = wav[..., :wav.shape[-1]//160 * 160]
+            wav = resample(wav)
+            if self.window_size != None:
+                wav = wav[..., :wav.shape[-1]//self.window_size * self.window_size]
             
-            x, s = self.backbone.preprocessor(input_signal=wav.cuda(), length=torch.LongTensor([wav.shape[-1]]).cuda())
-            n = int(self.window_size / 160 - 1) # window size in stft steps
-            x = x[..., :s[0].cpu().item()//n*n].view(x.shape[0], x.shape[1], -1, n).transpose(-3, -2)
-            x = x.reshape((-1, x.shape[-2], x.shape[-1]))
-            y = self.backbone.encoder.forward(audio_signal=x, length=torch.LongTensor([x.shape[-1]]))[0]
-            
+            if not ("wav2vec2" in self.backbone_name):
+                x, s = self.backbone.preprocessor(input_signal=wav.cuda(), length=torch.LongTensor([wav.shape[-1]]).cuda())
+                if self.window_size != None:
+                    n = int(self.window_size / 160 - 1) # window size in stft steps
+                    x = x[..., :s[0].cpu().item()//n*n].view(x.shape[0], x.shape[1], -1, n).transpose(-3, -2)
+                    x = x.reshape((-1, x.shape[-2], x.shape[-1]))
+                y = self.backbone.encoder.forward(audio_signal=x,
+                                                  length=torch.LongTensor([x.shape[-1]]))[0]
+            else:
+                wav = wav[None, :]
+                if self.window_size != None:
+                    wav = wav.view(1, -1, self.window_size)
+                    wav = wav.reshape((-1, 1, self.window_size))
+                y = self.backbone(wav)
+            print(y.shape)
             features.append(y.mean(-1).mean(0))            
             
         features = torch.stack(features)
