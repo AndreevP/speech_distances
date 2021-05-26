@@ -82,7 +82,6 @@ class DistributionalMetric(Metric):
                     wav = wav.view(1, -1, self.window_size)
                     wav = wav.reshape((-1, 1, self.window_size))
                 y = self.backbone(wav)
-            print(y.shape)
             features.append(y.mean(-1).mean(0))            
             
         features = torch.stack(features)
