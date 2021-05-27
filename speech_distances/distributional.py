@@ -39,6 +39,10 @@ class DistributionalMetric(Metric):
                          num_runs=num_runs, window_size=window_size,
                          conditional=conditional)
         
+        self.conditional = conditional
+        self.num_runs = num_runs
+        self.sample_size = sample_size
+        
         self.features = self.extract_features(self.path, use_cached)
         self.reference_features = self.extract_features(self.reference_path, use_cached)
     
@@ -97,10 +101,65 @@ class FrechetDistance(DistributionalMetric):
     """Class for computation of Frechet Distances 
     """
     def calculate_metric(self, use_cached=True):
-        raise NotImplementedError
+        """
+        calculates mean and std of the FID evaluated self.num_runs times on pairs of random samples from
+        (self.features, self.reference_features). Samples are similarly indexed if self.conditional ==  True and
+        independently different otherwise
+        """
+        n, _ = self.features.shape
+        metric_results = []
 
-class MMD(DistributionalMetric):
+        for _ in range(self.num_runs):
+
+            if self.conditional:
+                permutation = torch.randperm(n)
+                mask = permutation[:self.sample_size]
+                mask_ref = mask
+            else:
+                permutation = torch.randperm(n)
+                mask = permutation[:self.sample_size]
+                permutation_ref = torch.randperm(n)
+                mask_ref = permutation_ref[:self.sample_size]
+
+            sample_features = self.features[mask]
+            sample_reference_features = self.reference_features[mask_ref]
+            metric = self.distance(sample_features, sample_reference_features)
+            metric_results.append(metric)
+
+        metric_results = torch.tensor(metric_results)
+        return metric_results.mean(), metric_results.std()
+
+    @staticmethod
+    def distance(X, Y):
+        n, d = X.shape
+        mean_X = X.mean(0).reshape((1, d))
+        mean_Y = Y.mean(0).reshape((1, d))
+        unbiased_X = X - torch.ones((n, 1)) @ mean_X
+        unbiased_Y = Y - torch.ones((n, 1)) @ mean_Y
+        cov_X = 1 / (n - 1) * unbiased_X.T @ unbiased_X
+        cov_Y = 1 / (n - 1) * unbiased_Y.T @ unbiased_Y
+        bias_term = torch.sum((mean_X - mean_Y) ** 2)
+
+        cross_var = torch.svd(cov_X * cov_Y, compute_uv=False)[1]
+        cross_var = torch.sqrt(cross_var[cross_var > 0]).sum()
+
+        var_term = torch.trace(cov_X + cov_Y) - 2 * cross_var
+        return torch.sqrt(bias_term + var_term)
+
+
+class MMD(FrechetDistance):
     """Class for computation of Maximum Mean Discrepancies
     """
-    def calculate_metric(self, use_cached=True):
-        raise NotImplementedError
+
+    @staticmethod
+    def distance(X, Y):
+
+        def kernel(x, y):
+            return (x.T @ y / x.shape[1] + 1) ** 3
+
+        n, d = X.shape
+        kernel_X = (kernel(X, X) * (1 - torch.eye(d))).sum() / (n * (n - 1))
+        kernel_Y = (kernel(Y, Y) * (1 - torch.eye(d))).sum() / (n * (n - 1))
+        kernel_XY = kernel(X, Y).sum() / n ** 2
+        return torch.sqrt(kernel_X + kernel_Y + kernel_XY)
+    
