@@ -51,9 +51,10 @@ def infer_wavenet(args):
     files = [item for item in os.listdir(args.folder_in) if item.endswith('wav')]
     for idx, audio in enumerate(files):
           wav_path = os.path.join(args.folder_in, audio)
-          c = convert_to_mel(wav_path, hparams.sample_rate, hparams.num_mels)
+          c = convert_to_mel(wav_path, hparams.sample_rate, hparams.num_mels)[0]
           if c.shape[1] != hparams.num_mels:
-              np.swapaxes(c, 0, 1)
+              с = np.swapaxes(c, 0, 1)
+              # с = с.transpose(0, 1)
           # Range [0, 4] was used for training Tacotron2 but WaveNet vocoder assumes [0, 1]
           # c = np.interp(c, (0, 4), (0, 1))
 

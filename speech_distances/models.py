@@ -52,16 +52,19 @@ def load_model(name: str, device="cpu"):
 
         if not os.path.exists(wn_preset):
             os.makedirs("weights", exist_ok=True)
-            wget.download(
-                'https://www.dropbox.com/s/0vsd7973w20eskz/20180510_mixture_lj_checkpoint_step000320000_ema.json',
-                out="weights"
-            )
+            # wget.download(
+            #     'https://www.dropbox.com/s/0vsd7973w20eskz/20180510_mixture_lj_checkpoint_step000320000_ema.json',
+            #     out="weights"
+            # )
+            os.system('curl -L "https://www.dropbox.com/s/0vsd7973w20eskz/20180510_mixture_lj_checkpoint_step000320000_ema.json" -o weights/20180510_mixture_lj_checkpoint_step000320000_ema.json')
         if not os.path.exists(wn_checkpoint_path):
             os.makedirs("weights", exist_ok=True)
-            wget.download(
-                'https://www.dropbox.com/s/zdbfprugbagfp2w/20180510_mixture_lj_checkpoint_step000320000_ema.pth',
-                out="weights"
-            )
+            # wget.download(
+            #     'https://www.dropbox.com/s/zdbfprugbagfp2w/20180510_mixture_lj_checkpoint_step000320000_ema.pth',
+            #     out="weights"
+            # )
+            os.system('curl -L "https://www.dropbox.com/s/zdbfprugbagfp2w/20180510_mixture_lj_checkpoint_step000320000_ema.pth" -o weights/20180510_mixture_lj_checkpoint_step000320000_ema.pth')
+
 
         from hparams import hparams
         with open(wn_preset) as f:
@@ -77,7 +80,7 @@ def load_model(name: str, device="cpu"):
         model = build_model().to(device)
 
         print("Load checkpoint from {}".format(wn_checkpoint_path))
-        checkpoint = torch.load(wn_checkpoint_path)
+        checkpoint = torch.load(wn_checkpoint_path, map_location=device)
         model.load_state_dict(checkpoint["state_dict"])
 
         return (hparams, model)

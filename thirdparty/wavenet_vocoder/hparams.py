@@ -7,6 +7,25 @@ import numpy as np
 # Default hyperparameters:
 hparams = HParams(
     name="wavenet_vocoder",
+    builder=None,
+    min_level_db=None,
+    ref_level_db=None,
+    rescaling=None,
+    rescaling_max=None,
+    allow_clipping_in_normalization=None,
+    weight_normalization=None,
+    upsample_scales=[4, 4, 4, 4],
+    freq_axis_kernel_size=None,
+    test_size=0.5,
+    test_num_samples=None,
+    random_state=42,
+    adam_beta1=0.9,
+    adam_beta2=0.999,
+    adam_eps=0.0001,
+    amsgrad=None,
+    initial_learning_rate=0.05,
+    weight_decay=0.0,
+    legacy=None,
 
     # Input type:
     # 1. raw [-1, 1]
