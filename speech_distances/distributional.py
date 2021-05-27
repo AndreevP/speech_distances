@@ -6,6 +6,7 @@ import glob
 import torch
 import os
 import tqdm
+from scipy.linalg import sqrtm
 
 
 class DistributionalMetric(Metric):
@@ -139,11 +140,9 @@ class FrechetDistance(DistributionalMetric):
         cov_X = 1 / (n - 1) * unbiased_X.T @ unbiased_X
         cov_Y = 1 / (n - 1) * unbiased_Y.T @ unbiased_Y
         bias_term = torch.sum((mean_X - mean_Y) ** 2)
+        cross_var = sqrtm(cov_X * cov_Y)
 
-        cross_var = torch.svd(cov_X * cov_Y, compute_uv=False)[1]
-        cross_var = torch.sqrt(cross_var[cross_var > 0]).sum()
-
-        var_term = torch.trace(cov_X + cov_Y) - 2 * cross_var
+        var_term = torch.trace(cov_X + cov_Y - 2 * cross_var)
         return torch.sqrt(bias_term + var_term)
 
 
