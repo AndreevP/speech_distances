@@ -248,6 +248,7 @@ dependencies:
     - tensorboard==2.5.0
     - tensorboard-data-server==0.6.1
     - tensorboard-plugin-wit==1.8.0
+    - tensorboardX==2.2
     - terminado==0.9.5
     - testpath==0.5.0
     - threadpoolctl==2.1.0
@@ -265,7 +266,6 @@ dependencies:
     - unidecode==1.2.0
     - urllib3==1.26.4
     - wandb==0.10.30
-    - wavenet_vocoder==0.1.1
     - webdataset==0.1.62
     - webencodings==0.5.1
     - werkzeug==2.0.1

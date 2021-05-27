@@ -1,6 +1,3 @@
 [submodule "thirdparty/hifi-gan"]
 	path = thirdparty/hifi-gan
 	url = https://github.com/jik876/hifi-gan.git
-[submodule "thirdparty/wavenet_vocoder"]
-	path = thirdparty/wavenet_vocoder
-	url = https://github.com/r9y9/wavenet_vocoder.git
