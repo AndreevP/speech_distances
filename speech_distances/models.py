@@ -49,7 +49,7 @@ def load_model(name: str, device="cpu"):
         return vocoder
     elif name.lower() == 'waveglow':
         from .waveglow import Vocoder
-        vocoder = Vocoder()
+        vocoder = Vocoder().to(device)
         return vocoder
     elif name.lower() == 'wavenet':
         wn_preset = "weights/20180510_mixture_lj_checkpoint_step000320000_ema.json"

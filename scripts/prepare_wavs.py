@@ -101,12 +101,13 @@ def infer_melgan(args):
 def infer_waveglow(args):
     target_sample_rate = 22050
     n_mels = 80
-    model = load_model(args.model_name)
-    meller = MelSpectrogram()
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    model = load_model(args.model_name, device=device)
+    meller = MelSpectrogram().to(device)
     files = [item for item in os.listdir(args.folder_in) if item.endswith('wav')]
     for idx, audio in enumerate(files):
         wav_path = os.path.join(args.folder_in, audio)
-        wav = load_wav(wav_path, target_sample_rate)
+        wav = load_wav(wav_path, target_sample_rate).to(device)
         mel = meller(wav)
         if mel.shape[1] != n_mels:
             mel = mel.permute(0, 2, 1)
