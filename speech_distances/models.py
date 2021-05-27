@@ -45,8 +45,11 @@ def load_model(name: str, device="cpu"):
         return Wav2Vec2ConvEncoder(device)
     elif name.lower() == 'melgan':
         import torch
+        import gdown
         os.makedirs("weights", exist_ok=True)
-        wget.download('https://github.com/descriptinc/melgan-neurips/archive/master.zip', out="weights")
+        # wget.download('https://github.com/descriptinc/melgan-neurips/archive/master.zip', out="weights")
+        url = 'https://drive.google.com/uc?id=' + '1vNp5ZsfEBZQBXqsUOJZUYTkTedk6HZQS'
+        gdown.download(url, 'weights/melgan-neurips-master.zip', quiet=True)
         os.system('unzip weights/melgan-neurips-master.zip -d weights/')
         vocoder = torch.hub.load('weights/melgan-neurips-master', 'load_melgan', source='local')
         return vocoder
