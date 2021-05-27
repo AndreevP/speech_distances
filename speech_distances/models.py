@@ -1,5 +1,5 @@
-"""This is a module for model load. If possible, use nemo or torch model zoo. 
-Imports are hided in if statements for efficiency. 
+"""This is a module for model load. If possible, use nemo or torch model zoo.
+Imports are hided in if statements for efficiency.
 """
 import os.path
 import wget
@@ -43,11 +43,48 @@ def load_model(name: str, device="cpu"):
     elif name.lower() == 'wav2vec2_conv':
         from .wav2vec2 import Wav2Vec2ConvEncoder
         return Wav2Vec2ConvEncoder(device)
+    elif name.lower() == 'melgan':
+        vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
+        return vocoder
+    elif name.lower() == 'wavenet_vocoder':
+        wn_preset = "weights/20180510_mixture_lj_checkpoint_step000320000_ema.json"
+        wn_checkpoint_path = "weights/20180510_mixture_lj_checkpoint_step000320000_ema.pth"
+
+        if not os.path.exists(wn_preset):
+            os.makedirs("weights", exist_ok=True)
+            wget.download(
+                'curl -O -L "https://www.dropbox.com/s/0vsd7973w20eskz/20180510_mixture_lj_checkpoint_step000320000_ema.json"',
+                out="weights"
+            )
+        if not os.path.exists(wn_checkpoint_path):
+            os.makedirs("weights", exist_ok=True)
+            wget.download(
+                'curl -O -L "https://www.dropbox.com/s/zdbfprugbagfp2w/20180510_mixture_lj_checkpoint_step000320000_ema.pth"',
+                out="weights"
+            )
+
+        from hparams import hparams
+        with open(wn_preset) as f:
+            hparams.parse_json(f.read())
+
+        import sys
+        sys.path.append('thirdparty/wavenet_vocoder')
+
+        from train import build_model
+        from synthesis import wavegen
+        import torch
+
+        model = build_model().to(device)
+
+        print("Load checkpoint from {}".format(wn_checkpoint_path))
+        checkpoint = torch.load(wn_checkpoint_path)
+        model.load_state_dict(checkpoint["state_dict"])
+
+        return model
     else:
         raise NotImplementedError
 
 ## Todo: wav2vec
-        
-# nvidia-nemo TTS+vocoder-inference example: 
+
+# nvidia-nemo TTS+vocoder-inference example:
 # https://colab.research.google.com/github/NVIDIA/NeMo/blob/main/tutorials/tts/1_TTS_inference.ipynb#scrollTo=46eLhKnTPXS9
-            
