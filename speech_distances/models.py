@@ -46,20 +46,20 @@ def load_model(name: str, device="cpu"):
     elif name.lower() == 'melgan':
         vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
         return vocoder
-    elif name.lower() == 'wavenet_vocoder':
+    elif name.lower() == 'wavenet':
         wn_preset = "weights/20180510_mixture_lj_checkpoint_step000320000_ema.json"
         wn_checkpoint_path = "weights/20180510_mixture_lj_checkpoint_step000320000_ema.pth"
 
         if not os.path.exists(wn_preset):
             os.makedirs("weights", exist_ok=True)
             wget.download(
-                'curl -O -L "https://www.dropbox.com/s/0vsd7973w20eskz/20180510_mixture_lj_checkpoint_step000320000_ema.json"',
+                'https://www.dropbox.com/s/0vsd7973w20eskz/20180510_mixture_lj_checkpoint_step000320000_ema.json',
                 out="weights"
             )
         if not os.path.exists(wn_checkpoint_path):
             os.makedirs("weights", exist_ok=True)
             wget.download(
-                'curl -O -L "https://www.dropbox.com/s/zdbfprugbagfp2w/20180510_mixture_lj_checkpoint_step000320000_ema.pth"',
+                'https://www.dropbox.com/s/zdbfprugbagfp2w/20180510_mixture_lj_checkpoint_step000320000_ema.pth',
                 out="weights"
             )
 
@@ -80,7 +80,7 @@ def load_model(name: str, device="cpu"):
         checkpoint = torch.load(wn_checkpoint_path)
         model.load_state_dict(checkpoint["state_dict"])
 
-        return model
+        return (hparams, model)
     else:
         raise NotImplementedError
 
