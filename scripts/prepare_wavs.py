@@ -6,6 +6,7 @@ from speech_distances.models import load_model
 from tqdm import tqdm
 import numpy as np
 import torchaudio
+import torch
 
 def parse_args():
     parser = argparse.ArgumentParser(description='inference wavenets')
@@ -30,13 +31,16 @@ def infer_melgan(args):
     files = [item for item in os.listdir(args.folder_in) if item.endswith('wav')]
     for idx, audio in enumerate(files):
         wav_path = os.path.join(args.folder_in, audio)
-        wav, sample_rate = torchaudio.load(wav_file)
+        wav, sample_rate = torchaudio.load(wav_path)
         wav = torchaudio.transforms.Resample(sample_rate, target_sample_rate)(wav)
         with torch.no_grad():
             mel = model(wav)
             waveform = model.inverse(mel)
         path = os.path.join(args.folder_out, audio)
-        torchaudio.save(path, waveform, target_sample_rate)
+        folder = os.path.dirname(path)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        torchaudio.save(path, waveform.cpu(), target_sample_rate)
 
 
 def infer_wavenet(args):
@@ -61,6 +65,9 @@ def infer_wavenet(args):
           # Generate
           waveform = wavegen(model, c=c, fast=True, tqdm=tqdm)
           path = os.path.join(args.folder_out, audio)
+          folder = os.path.dirname(path)
+          if not os.path.exists(folder):
+              os.makedirs(folder)
           torchaudio.save(path, waveform, hparams.sample_rate)
 
 
