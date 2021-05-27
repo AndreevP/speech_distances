@@ -2,13 +2,15 @@ import argparse
 import sys
 import os
 sys.path.append('.')
-from speech_distances.models import load_model
+
 from tqdm import tqdm
 import numpy as np
-import torchaudio
 import torch
 from torch import nn
+import torchaudio
 import librosa
+
+from speech_distances.models import load_model
 
 
 class MelSpectrogramConfig:
@@ -98,6 +100,7 @@ def infer_melgan(args):
             os.makedirs(folder)
         torchaudio.save(path, waveform.cpu(), target_sample_rate)
 
+
 def infer_waveglow(args):
     target_sample_rate = 22050
     n_mels = 80
@@ -149,7 +152,32 @@ def infer_wavenet(args):
           torchaudio.save(path, waveform, hparams.sample_rate)
 
 
-if __name__ == '__main__':
+def infer_hifigan(args):
+    import subprocess
+
+    load_model(args.model_name)
+    model_name = args.model_name if args.model_name != 'hifigan' else 'hifigan_v1'
+    
+    inference_file = "thirdparty/hifi-gan/inference.py"
+    exe_inference_file = "thirdparty/hifi-gan/exe_inference.py"
+    subprocess.call([f"sed '1 i #!/usr/bin/env python' {inference_file} > {exe_inference_file}"], shell=True)
+    
+    args_list = [
+        "--input_wavs_dir", args.folder_in,
+        "--output_dir", f"data/out/{model_name}",
+        "--checkpoint_file", f"pretrained/{model_name}/model.pth",
+    ]
+    cmd = [exe_inference_file] + args_list
+    os.chmod(exe_inference_file, 777)
+
+    popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+    for stdout_line in iter(popen.stdout.readline, ""):
+        print(stdout_line, end='') 
+    popen.stdout.close()
+    # print(subprocess.run([inference_file] + args_list, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+
+
+def main():
     args = parse_args()
     if args.model_name == 'melgan':
         infer_melgan(args)
@@ -157,5 +185,12 @@ if __name__ == '__main__':
         infer_wavenet(args)
     elif args.model_name == 'waveglow':
         infer_waveglow(args)
+    elif args.model_name in ['hifigan', 'hifigan_v1', 'hifigan_v2', 'hifigan_v3']:
+        infer_hifigan(args)
     else:
         raise ValueError(f"Model {args.model_name} not supported yet")
+
+
+if __name__ == '__main__':
+    main()
+    
