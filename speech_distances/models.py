@@ -45,7 +45,10 @@ def load_model(name: str, device="cpu"):
         return Wav2Vec2ConvEncoder(device)
     elif name.lower() == 'melgan':
         import torch
-        vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
+        os.makedirs("weights", exist_ok=True)
+        wget.download('https://github.com/descriptinc/melgan-neurips/archive/master.zip', out="weights")
+        os.system('unzip weights/melgan-neurips-master.zip -d weights/')
+        vocoder = torch.hub.load('weights/melgan-neurips-master', 'load_melgan', source='local')
         return vocoder
     elif name.lower() == 'waveglow':
         from .waveglow import Vocoder
@@ -89,6 +92,32 @@ def load_model(name: str, device="cpu"):
         model.load_state_dict(checkpoint["state_dict"])
 
         return (hparams, model)
+
+    elif name.lower() in ['hifigan', 'hifigan_v1', 'hifigan_v2', 'hifigan_v3']:
+        import gdown
+
+        name = name.lower()
+        header = "https://drive.google.com/uc?id="
+
+        if name in ['hifigan', 'hifigan_v1']:
+            name = 'hifigan_v1'
+            model_url = header + "1QEBKespXTmsMzsSRBXWdpIT0Ve7nnaRZ"
+            config_url = header + "1l5EUVBKM0SK7ec4HWf_wZvEITAsdOLFC"
+        elif name == 'hifigan_v2':
+            model_url = header + "1I415g2Cdx5FWy6ECma0zEc9GhX_TnbFv"
+            config_url = header + "11LnhSum3EAeo5zag-tpU8HKk0MdbrQxF"
+        else:
+            model_url = header + "1fnkOteyRdPq4Gh2cfso3gqqrC6inLWsF"
+            config_url = header + "1mke75axgO2sdJ41GL2HTrcb4KyAl0i45"
+
+        if not os.path.exists(f'pretrained/{name}'):
+            os.makedirs(f'pretrained/{name}', exist_ok=True)
+
+        model_output = f'pretrained/{name}/model.pth'
+        config_output = f'pretrained/{name}/config.json'
+        gdown.download(model_url, model_output, quiet=True)
+        gdown.download(config_url, config_output, quiet=True)
+
     else:
         raise NotImplementedError
 
