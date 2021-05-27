@@ -43,8 +43,8 @@ class DistributionalMetric(Metric):
         self.num_runs = num_runs
         self.sample_size = sample_size
         
-        self.features = self.extract_features(self.path, use_cached)
-        self.reference_features = self.extract_features(self.reference_path, use_cached)
+        self.features = self.extract_features(self.path, use_cached).cpu()
+        self.reference_features = self.extract_features(self.reference_path, use_cached).cpu()
     
     @torch.no_grad()
     def extract_features(self, path, use_cached=True):
