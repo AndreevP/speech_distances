@@ -42,6 +42,23 @@ def infer_melgan(args):
             os.makedirs(folder)
         torchaudio.save(path, waveform.cpu(), target_sample_rate)
 
+def infer_waveglow(args):
+    target_sample_rate = 22050
+    n_mels = 80
+    model = load_model(args.model_name)
+    files = [item for item in os.listdir(args.folder_in) if item.endswith('wav')]
+    for idx, audio in enumerate(files):
+        wav_path = os.path.join(args.folder_in, audio)
+        mel = convert_to_mel(wav_path, target_sample_rate, n_mels)
+        if mel.shape[1] != n_mels:
+            mel = mel.permute(0, 2, 1)
+        waveform = model.inference(mel)
+        path = os.path.join(args.folder_out, audio)
+        folder = os.path.dirname(path)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        torchaudio.save(path, waveform.cpu(), target_sample_rate)
+
 
 def infer_wavenet(args):
     import sys
@@ -76,5 +93,7 @@ if __name__ == '__main__':
         infer_melgan(args)
     elif args.model_name == 'wavenet':
         infer_wavenet(args)
+    elif args.model_name == 'waveglow':
+        infer_waveglow(args)
     else:
         raise ValueError(f"Model {args.model_name} not supported yet")
