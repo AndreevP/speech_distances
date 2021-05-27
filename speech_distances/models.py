@@ -44,6 +44,7 @@ def load_model(name: str, device="cpu"):
         from .wav2vec2 import Wav2Vec2ConvEncoder
         return Wav2Vec2ConvEncoder(device)
     elif name.lower() == 'melgan':
+        import torch
         vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
         return vocoder
     elif name.lower() == 'wavenet':
