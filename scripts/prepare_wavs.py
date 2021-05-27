@@ -7,6 +7,64 @@ from tqdm import tqdm
 import numpy as np
 import torchaudio
 import torch
+from torch import nn
+import librosa
+
+
+class MelSpectrogramConfig:
+    sr: int = 22050
+    win_length: int = 1024
+    hop_length: int = 256
+    n_fft: int = 1024
+    f_min: int = 0
+    f_max: int = 8000
+    n_mels: int = 80
+    power: float = 1.0
+
+    # value of melspectrograms if we fed a silence into `MelSpectrogram`
+    pad_value: float = -11.5129251
+    frequency_mask_max_percentage: float = 0.15
+    time_mask_max_percentage: float = 0.0
+    mask_probability: float = 0.3
+
+
+class MelSpectrogram(nn.Module):
+
+    def __init__(self, config=MelSpectrogramConfig):
+        super(MelSpectrogram, self).__init__()
+
+        self.config = config
+
+        self.mel_spectrogram = torchaudio.transforms.MelSpectrogram(
+            sample_rate=config.sr,
+            win_length=config.win_length,
+            hop_length=config.hop_length,
+            n_fft=config.n_fft,
+            f_min=config.f_min,
+            f_max=config.f_max,
+            n_mels=config.n_mels
+        )
+
+        # The is no way to set power in constructor in 0.5.0 version.
+        self.mel_spectrogram.spectrogram.power = config.power
+
+        # Default `torchaudio` mel basis uses HTK formula. In order to be compatible with WaveGlow
+        # we decided to use Slaney one instead (as well as `librosa` does by default).
+        mel_basis = librosa.filters.mel(
+            sr=config.sr,
+            n_fft=config.n_fft,
+            n_mels=config.n_mels,
+            fmin=config.f_min,
+            fmax=config.f_max
+        ).T
+        self.mel_spectrogram.mel_scale.fb.copy_(torch.tensor(mel_basis))
+
+    def forward(self, audio):
+        mel = self.mel_spectrogram(audio) \
+                .clamp_(min=1e-5) \
+                .log_()
+        return mel
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='inference wavenets')
@@ -18,11 +76,10 @@ def parse_args():
     return args
 
 
-def convert_to_mel(wav_file, target_sample_rate, n_mels):
+def load_wav(wav_file, target_sample_rate):
     wav, sample_rate = torchaudio.load(wav_file)
     wav = torchaudio.transforms.Resample(sample_rate, target_sample_rate)(wav)
-    mel = torchaudio.transforms.MelSpectrogram(sample_rate=target_sample_rate, n_mels=n_mels)(wav)
-    return mel
+    return wav
 
 
 def infer_melgan(args):
@@ -31,8 +88,7 @@ def infer_melgan(args):
     files = [item for item in os.listdir(args.folder_in) if item.endswith('wav')]
     for idx, audio in enumerate(files):
         wav_path = os.path.join(args.folder_in, audio)
-        wav, sample_rate = torchaudio.load(wav_path)
-        wav = torchaudio.transforms.Resample(sample_rate, target_sample_rate)(wav)
+        wav = load_wav(wav_path, target_sample_rate)
         with torch.no_grad():
             mel = model(wav)
             waveform = model.inverse(mel)
@@ -46,10 +102,12 @@ def infer_waveglow(args):
     target_sample_rate = 22050
     n_mels = 80
     model = load_model(args.model_name)
+    meller = MelSpectrogram()
     files = [item for item in os.listdir(args.folder_in) if item.endswith('wav')]
     for idx, audio in enumerate(files):
         wav_path = os.path.join(args.folder_in, audio)
-        mel = convert_to_mel(wav_path, target_sample_rate, n_mels)
+        wav = load_wav(wav_path, target_sample_rate)
+        mel = meller(wav)
         if mel.shape[1] != n_mels:
             mel = mel.permute(0, 2, 1)
         waveform = model.inference(mel)
@@ -67,12 +125,15 @@ def infer_wavenet(args):
     from train import build_model
     from synthesis import wavegen
     from tqdm import tqdm
+    target_sample_rate = 22050
 
     hparams, model = load_model(args.model_name)
+    meller = MelSpectrogram()
     files = [item for item in os.listdir(args.folder_in) if item.endswith('wav')]
     for idx, audio in enumerate(files):
           wav_path = os.path.join(args.folder_in, audio)
-          c = convert_to_mel(wav_path, hparams.sample_rate, hparams.num_mels)[0]
+          wav = load_wav(wav_path, target_sample_rate)
+          c = meller(wav)[0]
           if c.shape[1] != hparams.num_mels:
               c = c.transpose(0, 1)
           # Range [0, 4] was used for training Tacotron2 but WaveNet vocoder assumes [0, 1]

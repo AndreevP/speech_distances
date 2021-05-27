@@ -11,12 +11,13 @@ class Vocoder(nn.Module):
 
     def __init__(self):
         super(Vocoder, self).__init__()
+        os.makedirs("weights", exist_ok=True)
         gdd.download_file_from_google_drive(
             file_id='1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF',
-            dest_path='./waveglow_256channels_universal_v5.pt'
+            dest_path='weights/waveglow_256channels_universal_v5.pt'
         )
 
-        model = torch.load('waveglow_256channels_universal_v5.pt')['model']
+        model = torch.load('weights/waveglow_256channels_universal_v5.pt')['model']
         self.net = model.remove_weightnorm(model)
 
     @torch.no_grad()
