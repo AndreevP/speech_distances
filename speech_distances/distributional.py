@@ -179,5 +179,5 @@ class MMD(FrechetDistance):
         kernel_X = (kernel(X, X) * (1 - torch.eye(d))).sum() / (n * (n - 1))
         kernel_Y = (kernel(Y, Y) * (1 - torch.eye(d))).sum() / (n * (n - 1))
         kernel_XY = kernel(X, Y).sum() / n ** 2
-        return torch.sqrt(kernel_X + kernel_Y + kernel_XY)
+        return kernel_X + kernel_Y + kernel_XY
     
