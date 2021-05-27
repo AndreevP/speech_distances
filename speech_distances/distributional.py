@@ -7,6 +7,7 @@ import torch
 import os
 import tqdm
 from scipy.linalg import sqrtm
+import numpy as np
 
 
 class DistributionalMetric(Metric):
@@ -132,18 +133,36 @@ class FrechetDistance(DistributionalMetric):
 
     @staticmethod
     def distance(X, Y):
+        eps = 1e-6
         n, d = X.shape
-        mean_X = X.mean(0).reshape((1, d))
-        mean_Y = Y.mean(0).reshape((1, d))
-        unbiased_X = X - torch.ones((n, 1)) @ mean_X
-        unbiased_Y = Y - torch.ones((n, 1)) @ mean_Y
-        cov_X = 1 / (n - 1) * unbiased_X.T @ unbiased_X
-        cov_Y = 1 / (n - 1) * unbiased_Y.T @ unbiased_Y
-        bias_term = torch.sum((mean_X - mean_Y) ** 2)
-        cross_var = sqrtm(cov_X * cov_Y)
+        mu1 = X.mean(0).reshape((1, d))
+        mu2 = Y.mean(0).reshape((1, d))
+        unbiased_X = X - torch.ones((n, 1)) @ mu1
+        unbiased_Y = Y - torch.ones((n, 1)) @ mu2
+        sigma1 = (1 / (n - 1) * unbiased_X.T @ unbiased_X).numpy()
+        sigma2 = (1 / (n - 1) * unbiased_Y.T @ unbiased_Y).numpy()
 
-        var_term = torch.trace(cov_X + cov_Y - 2 * cross_var)
-        return torch.sqrt(bias_term + var_term)
+        mu1 = mu1.squeeze().numpy()
+        mu2 = mu2.squeeze().numpy()       
+        diff = mu1 - mu2
+        # product might be almost singular
+        covmean, _ = sqrtm(sigma1.dot(sigma2), disp=False)
+        if not np.isfinite(covmean).all():
+            msg = "fid calculation produces singular product; adding %s to diagonal of cov estimates" % eps
+            warnings.warn(msg)
+            offset = np.eye(sigma1.shape[0]) * eps
+            covmean = sqrtm((sigma1 + offset).dot(sigma2 + offset))
+
+        # numerical error might give slight imaginary component
+        if np.iscomplexobj(covmean):
+            if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
+                m = np.max(np.abs(covmean.imag))
+                raise ValueError("Imaginary component {}".format(m))
+            covmean = covmean.real
+
+        tr_covmean = np.trace(covmean)
+
+        return diff.dot(diff) + np.trace(sigma1) + np.trace(sigma2) - 2 * tr_covmean
 
 
 class MMD(FrechetDistance):
