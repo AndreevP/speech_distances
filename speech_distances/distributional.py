@@ -8,6 +8,7 @@ import os
 import tqdm
 from scipy.linalg import sqrtm
 import numpy as np
+import warnings
 
 
 class DistributionalMetric(Metric):
@@ -133,17 +134,13 @@ class FrechetDistance(DistributionalMetric):
 
     @staticmethod
     def distance(X, Y):
-        eps = 1e-6
-        n, d = X.shape
-        mu1 = X.mean(0).reshape((1, d))
-        mu2 = Y.mean(0).reshape((1, d))
-        unbiased_X = X - torch.ones((n, 1)) @ mu1
-        unbiased_Y = Y - torch.ones((n, 1)) @ mu2
-        sigma1 = (1 / (n - 1) * unbiased_X.T @ unbiased_X).numpy()
-        sigma2 = (1 / (n - 1) * unbiased_Y.T @ unbiased_Y).numpy()
-
-        mu1 = mu1.squeeze().numpy()
-        mu2 = mu2.squeeze().numpy()       
+        eps = 1e-10
+        
+        mu1 = np.mean(X.numpy(), axis=0)
+        mu2 = np.mean(Y.numpy(), axis=0)
+        sigma1 = np.cov(X.numpy(), rowvar=False)
+        sigma2 = np.cov(Y.numpy(), rowvar=False)
+      
         diff = mu1 - mu2
         # product might be almost singular
         covmean, _ = sqrtm(sigma1.dot(sigma2), disp=False)
@@ -173,11 +170,10 @@ class MMD(FrechetDistance):
     def distance(X, Y):
 
         def kernel(x, y):
-            return (x.T @ y / x.shape[1] + 1) ** 3
+            return (x @ y.T / x.shape[1] + 1) ** 3
 
-        n, d = X.shape
-        kernel_X = (kernel(X, X) * (1 - torch.eye(d))).sum() / (n * (n - 1))
-        kernel_Y = (kernel(Y, Y) * (1 - torch.eye(d))).sum() / (n * (n - 1))
-        kernel_XY = kernel(X, Y).sum() / n ** 2
-        return kernel_X + kernel_Y + kernel_XY
+        kernel_X = kernel(X, X).mean() 
+        kernel_Y = kernel(Y, Y).mean()
+        kernel_XY = kernel(X, Y).mean()
+        return kernel_X + kernel_Y - 2 * kernel_XY
     
