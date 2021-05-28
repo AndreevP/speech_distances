@@ -4,8 +4,59 @@ from nemo.collections.tts.losses.stftlosses import MultiResolutionSTFTLoss
 from nemo.core.classes import Loss, typecheck
 from nemo.core.neural_types.elements import AudioSignal, LossType, NormalDistributionSamplesType, VoidType
 from nemo.core.neural_types.neural_type import NeuralType
+from torch.nn.utils.rnn import pad_sequence
+import torchaudio
+import glob
+import os
 
 from PerceptualAudio_Pytorch.models import JNDnet
+
+from .metric import Metric
+
+
+class MetricDPAM(Metric):
+
+    def __init__(self, path: str, reference_path: str, batch_size: int, device: str):
+        super().__init__(path)
+        model = JNDnet(nconv=14, 
+                       nchan=16, 
+                       dist_dp=0., 
+                       dist_act='no', 
+                       ndim=[8,4], 
+                       classif_dp=0.2, 
+                       classif_BN=2, 
+                       classif_act='sig', 
+                       dev=device)
+        state = torch.load('../PerceptualAudio_Pytorch/pretrained/dataset_combined_linear.pth', 
+                           map_location="cpu")['state']
+        model.load_state_dict(state)
+        model.to(device)
+        model.eval()
+        self.dpam_model = model
+        self.reference_path = reference_path
+        self.batch_size = batch_size
+
+    def distance(self, X, Y):
+        with torch.no_grad():
+            distances = self.dpam_model.model_dist.forward(X, Y)
+        return distances.mean()
+
+    def calculate_metric(self):
+        files = sorted(glob.glob(os.path.join(self.path, "*.wav")))
+        ref_files = sorted(glob.glob(os.path.join(self.reference_path, "*.wav")))
+        distances = []
+        for i in range(0, len(files), self.batch_size):
+            wavs = []
+            for file in files[i:i+self.batch_size]:
+                wav, sr = torchaudio.load(file)
+                wavs.append(torch.squeeze(wav))
+            for file in ref_files[i:i+self.batch_size]:
+                wav, sr = torchaudio.load(file)
+                wavs.append(torch.squeeze(wav))
+            wavs = pad_sequence(wavs, batch_first=True, padding_value=0.0)
+            split = wavs.shape[0] // 2
+            distances.append(self.distance(wavs[:split], wavs[split:]))
+        return torch.stack(distances).mean()
 
 
 class CustomLoss(Loss):
@@ -31,7 +82,7 @@ class CustomLoss(Loss):
         state = torch.load('../PerceptualAudio_Pytorch/pretrained/dataset_combined_linear.pth', 
                            map_location="cpu")['state']
         model.load_state_dict(state)
-        model.to(device)
+        model.to('cuda')
         model.eval()
         self.dpam_model = model
 
