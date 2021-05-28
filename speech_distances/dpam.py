@@ -28,8 +28,8 @@ class CustomLoss(Loss):
                        classif_BN=2, 
                        classif_act='sig', 
                        dev='cuda')
-        state = torch.load('../weights/dataset_combined_linear.pth', 
-                   map_location="cpu")['state']
+        state = torch.load('../PerceptualAudio_Pytorch/pretrained/dataset_combined_linear.pth', 
+                           map_location="cpu")['state']
         model.load_state_dict(state)
         model.to(device)
         model.eval()

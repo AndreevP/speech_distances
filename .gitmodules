@@ -4,3 +4,6 @@
 [submodule "thirdparty/waveglow"]
 	path = thirdparty/waveglow
 	url = https://github.com/NVIDIA/waveglow.git
+[submodule "PerceptualAudio_Pytorch"]
+	path = PerceptualAudio_Pytorch
+	url = https://github.com/adrienchaton/PerceptualAudio_Pytorch.git
