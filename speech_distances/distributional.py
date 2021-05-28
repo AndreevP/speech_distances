@@ -173,11 +173,10 @@ class MMD(FrechetDistance):
     def distance(X, Y):
 
         def kernel(x, y):
-            return (x.T @ y / x.shape[1] + 1) ** 3
+            return (x @ y.T / x.shape[1] + 1) ** 3
 
-        n, d = X.shape
-        kernel_X = (kernel(X, X) * (1 - torch.eye(d))).sum() / (n * (n - 1))
-        kernel_Y = (kernel(Y, Y) * (1 - torch.eye(d))).sum() / (n * (n - 1))
-        kernel_XY = kernel(X, Y).sum() / n ** 2
-        return kernel_X + kernel_Y + kernel_XY
+        kernel_X = kernel(X, X).mean() 
+        kernel_Y = kernel(Y, Y).mean()
+        kernel_XY = kernel(X, Y).mean()
+        return kernel_X + kernel_Y - 2 * kernel_XY
     
