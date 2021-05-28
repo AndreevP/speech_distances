@@ -6,7 +6,10 @@ import wget
 
 
 def load_model(name: str, device="cpu"):
-    if name.lower() == 'tacotron':
+    if name.lower() == 'uniglow':
+        from nemo.collections.tts.models import UniGlowModel
+        return UniGlowModel.from_pretrained(model_name="tts_uniglow", map_location=device)
+    elif name.lower() == 'tacotron':
         import nemo.collections.tts as nemo_tts
         return nemo_tts.models.Tacotron2Model.from_pretrained(model_name="Tacotron2-22050Hz", map_location=device)
     elif name.lower() == 'quartznet':
