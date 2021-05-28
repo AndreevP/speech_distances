@@ -45,15 +45,12 @@ class MetricDPAM(Metric):
         files = sorted(glob.glob(os.path.join(self.path, "*.wav")))
         ref_files = sorted(glob.glob(os.path.join(self.reference_path, "*.wav")))
         distances = []
-        for i in range(0, len(files), self.batch_size):
-            wavs = []
-            for file in files[i:i+self.batch_size]:
-                wav, sr = torchaudio.load(file)
-                wavs.append(torch.squeeze(wav))
-            for file in ref_files[i:i+self.batch_size]:
-                wav, sr = torchaudio.load(file)
-                wavs.append(torch.squeeze(wav))
-            wavs = pad_sequence(wavs, batch_first=True, padding_value=0.0)
+        for i in range(len(files)):
+            wav1, _ = torchaudio.load(files[i])
+            wav2, _ = torchaudio.load(ref_files[i])
+            wavs = pad_sequence((torch.squeeze(wav1), torch.squeeze(wav2)), 
+                                batch_first=True, 
+                                padding_value=0.0)
             split = wavs.shape[0] // 2
             distances.append(self.distance(wavs[:split], wavs[split:]))
         return torch.stack(distances).mean()
