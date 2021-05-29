@@ -50,7 +50,7 @@ FD = FrechetDistance(path=path, reference_path=reference_path, backbone=backbone
                      num_runs=num_runs, window_size=window_size,
                      conditional=conditional, use_cached=use_cached)
                      
-FD.calculate_metric() # outputs mean and std runs
+FD.calculate_metric() # outputs mean and std of metric computed for different subsets (num_runs) of audio files 
 ```
 
 In addition, demo notebooks for evaluation may be found in 
