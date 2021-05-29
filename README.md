@@ -20,7 +20,40 @@ We offer several metrics for audio quality evaluation, among them:
 - Frechet distributional metric
 - MMD (Maximum Mean Descrepancy) distributional metric
 
-Demo notebooks for evaluation may be found in 
+We provide easy to use interface for distributional metrics calculation:
+
+```python
+from speech_distances import FrechetDistance
+
+path = "./generated_waveforms" # path to .wav files to be evaluated
+reference_path = "./waveforms" # path to reference .wav files
+
+backbone = "deepspeech2" # name of neural network to be used as feature extreactor 
+                         # availble backbones: "deepspeech2", "wav2vec2", "quartznet",
+                         # "speakerrecognition_speakernet", "speakerverification_speakernet"
+          
+sr = 22050 # sampling rate of these audio files
+           # audio will be resampled to sampling rate suitable for particular backbone, typically 16000
+           
+sample_size = 10000 # number of wav files to be sampled from provided directories and used for evaluation
+num_runs = 1 # number of runs with different subsets of files for computation of mean and std
+
+window_size = None # number of timesteps within one window for feature computation
+                   # for all windows the features are computed independently and then averaged 
+                   # None if to use maximum window size and average only resulting feature maps
+                   
+conditional = True # defines whether to compute conditional version of the distance of not
+use_cached = True # try to reuse extracted features if possible?
+
+FD = FrechetDistance(path=path, reference_path=reference_path, backbone=backbone,
+                     sr=sr, sample_size=sample_size,
+                     num_runs=num_runs, window_size=window_size,
+                     conditional=conditional, use_cached=use_cached)
+                     
+FD.calculate_metric() # outputs mean and std runs
+```
+
+In addition, demo notebooks for evaluation may be found in 
 ```bash
 notebooks/demo_metric_*.ipynb
 ```
