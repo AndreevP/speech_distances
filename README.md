@@ -1,4 +1,6 @@
-# Deep Speech Distances
+# Deep Speech Distances (PyTorch)
+
+Please check our [report](https://drive.google.com/file/d/1Ud6zm1KbeTOD6Y5_K5MfW3zNjhRMQO7V/view?usp=sharing) for a detailed descriptions of this project results.
 
 Speech Generation has recently become one of the most trending problems in Deep Learning. Over the last decade DL techniques succesfully coped with such tasks as AI voice assitantce (Siri, Alexa etc.), speech enhancement and many others. Compared to other ML problems, Speech Generation has an important specification - ultimately, the sound quality can be evaluated only by the subjective assesment of a human or as an average of several individuals' assesments (Mean Opinion Score).
 This approach, however, is very expensive and time demanding, so the problem of automatic perceptual assessment logically arises. In the current work we experiment with various techniques to  measure the audio quality, including such network architectures as MOS-Net, MB-Net, and compare them with old school non-neural algorithms PESQ and ViSQOLv3. Moreover, we experiment with loss-nets (with DPAM, CDPAM and LPIPS architectures) inducing differenctiable metrics w.r.t which we could fine-tune the audio generating Vocoders.
