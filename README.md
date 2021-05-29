@@ -1,6 +1,6 @@
 # Deep Speech Distances (PyTorch)
 
-Please check our [report](https://drive.google.com/file/d/1Ud6zm1KbeTOD6Y5_K5MfW3zNjhRMQO7V/view?usp=sharing) for a detailed descriptions of this project results.
+Please check our [report](https://drive.google.com/file/d/1Ud6zm1KbeTOD6Y5_K5MfW3zNjhRMQO7V/view?usp=sharing) for a detailed description of this project results.
 
 Speech Generation has recently become one of the most trending problems in Deep Learning. Over the last decade DL techniques succesfully coped with such tasks as AI voice assitantce (Siri, Alexa etc.), speech enhancement and many others. Compared to other ML problems, Speech Generation has an important specification - ultimately, the sound quality can be evaluated only by the subjective assesment of a human or as an average of several individuals' assesments (Mean Opinion Score).
 This approach, however, is very expensive and time demanding, so the problem of automatic perceptual assessment logically arises. In the current work we experiment with various techniques to  measure the audio quality, including such network architectures as MOS-Net, MB-Net, and compare them with old school non-neural algorithms PESQ and ViSQOLv3. Moreover, we experiment with loss-nets (with DPAM, CDPAM and LPIPS architectures) inducing differenctiable metrics w.r.t which we could fine-tune the audio generating Vocoders.
@@ -22,27 +22,27 @@ We offer several metrics for audio quality evaluation, among them:
 - Frechet distributional metric
 - MMD (Maximum Mean Descrepancy) distributional metric
 
-We provide easy to use interface for distributional metrics calculation:
+We provide easy to use interface for distributional (Frechet distance and MMD) metrics calculation:
 
 ```python
-from speech_distances import FrechetDistance
+from speech_distances import FrechetDistance # or MMD
 
 path = "./generated_waveforms" # path to .wav files to be evaluated
 reference_path = "./waveforms" # path to reference .wav files
 
-backbone = "deepspeech2" # name of neural network to be used as feature extreactor 
-                         # availble backbones: "deepspeech2", "wav2vec2", "quartznet",
+backbone = "deepspeech2" # name of neural network to be used as feature extractor 
+                         # available backbones: "deepspeech2", "wav2vec2", "quartznet",
                          # "speakerrecognition_speakernet", "speakerverification_speakernet"
           
 sr = 22050 # sampling rate of these audio files
-           # audio will be resampled to sampling rate suitable for particular backbone, typically 16000
+           # audio will be resampled to sampling rate suitable for the particular backbone, typically 16000
            
 sample_size = 10000 # number of wav files to be sampled from provided directories and used for evaluation
 num_runs = 1 # number of runs with different subsets of files for computation of mean and std
 
 window_size = None # number of timesteps within one window for feature computation
                    # for all windows the features are computed independently and then averaged 
-                   # None if to use maximum window size and average only resulting feature maps
+                   # if None use maximum window size and average only resulting feature maps
                    
 conditional = True # defines whether to compute conditional version of the distance of not
 use_cached = True # try to reuse extracted features if possible?
