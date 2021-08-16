@@ -36,7 +36,8 @@ def load_model(name: str, device="cpu"):
         if os.path.isfile('weights/an4_pretrained_v2.pth'):
              return DeepSpeechEncoderWrapper("weights/an4_pretrained_v2.pth", device=device)
         else:
-            os.mkdir("weights")
+            if not os.path.exists("weights"):
+                os.makedirs("weights")
             wget.download("https://github.com/SeanNaren/deepspeech.pytorch/releases/download/v2.0/an4_pretrained_v2.pth",
                           out="weights")
             return DeepSpeechEncoderWrapper("weights/an4_pretrained_v2.pth", device=device)
@@ -124,8 +125,18 @@ def load_model(name: str, device="cpu"):
         gdown.download(model_url, model_output, quiet=True)
         gdown.download(config_url, config_output, quiet=True)
 
+    elif name.lower() == "wave2vec_mos":
+        from .wav2vec2 import Wav2Vec2MOS
+        import gdown
+        if not os.path.isfile('weights/wave2vec2mos.pth'):
+            if not os.path.exists("weights"):
+                os.makedirs("weights")
+            gdown.download("https://drive.google.com/uc?id=18kMTxj2VbRDrs_CBcCmZT-kGTvFvbVmm",
+                           output="weights/wave2vec2mos.pth")
+        return Wav2Vec2MOS('weights/wave2vec2mos.pth')        
     else:
         raise NotImplementedError
+        
 
 ## Todo: wav2vec
 
