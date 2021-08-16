@@ -2,8 +2,8 @@
 
 Please check our [report](https://drive.google.com/file/d/1Ud6zm1KbeTOD6Y5_K5MfW3zNjhRMQO7V/view?usp=sharing) for a detailed description of this project results.
 
-Speech Generation has recently become one of the most trending problems in Deep Learning. Over the last decade DL techniques succesfully coped with such tasks as AI voice assitantce (Siri, Alexa etc.), speech enhancement and many others. Compared to other ML problems, Speech Generation has an important specification - ultimately, the sound quality can be evaluated only by the subjective assesment of a human or as an average of several individuals' assesments (Mean Opinion Score).
-This approach, however, is very expensive and time demanding, so the problem of automatic perceptual assessment logically arises. In the current work we experiment with various techniques to  measure the audio quality, including such network architectures as MOS-Net, MB-Net, and compare them with old school non-neural algorithms PESQ and ViSQOLv3. Moreover, we experiment with loss-nets (with DPAM, CDPAM and LPIPS architectures) inducing differenctiable metrics w.r.t which we could fine-tune the audio generating Vocoders.
+This repo contatins utilities for automatic audio quality assesent. We provide code for distributional (Frechet-style) metrics computation and direct MOS score prediction. According to our experiments these methods for speech quality assessment have high correlation with MOS-es computed by crowd-sourced studies. 
+
 
 **Keywords:** GAN-TTS, speech distances, MOS-Net, MB-Net
 
@@ -54,6 +54,19 @@ FD = FrechetDistance(path=path, reference_path=reference_path, backbone=backbone
                      
 FD.calculate_metric() # outputs mean and std of metric computed for different subsets (num_runs) of audio files 
 ```
+One can also directly predict MOS scores by our wav2vec2_mos model:
+
+```python
+from speech_distances.models import load_model
+
+mos_pred = load_model("wave2vec_mos")
+
+path = "./generated_waveforms" # path to .wav files to be evaluated
+mos_pred.calculate(path) # outputs predicted MOS
+```
+
+According to our experiments these two methods for speech quality assessment have high correlation with MOS-es computed by crowd-sourced studies.
+
 
 In addition, demo notebooks for evaluation may be found in 
 ```bash
