@@ -1,8 +1,8 @@
 # Deep Speech Distances (PyTorch)
 
-Please check our [report](https://drive.google.com/file/d/1Ud6zm1KbeTOD6Y5_K5MfW3zNjhRMQO7V/view?usp=sharing) for a detailed description of this project results.
-
 This repo contatins utilities for automatic audio quality assesent. We provide code for distributional (Frechet-style) metrics computation and direct MOS score prediction. According to our experiments these methods for speech quality assessment have high correlation with MOS-es computed by crowd-sourced studies. 
+
+Please check our [report](https://drive.google.com/file/d/1Ud6zm1KbeTOD6Y5_K5MfW3zNjhRMQO7V/view?usp=sharing) for a detailed description of this project results.
 
 
 **Keywords:** GAN-TTS, speech distances, MOS-Net, MB-Net
