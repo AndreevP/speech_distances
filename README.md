@@ -9,18 +9,12 @@ This repo contatins utilities for automatic audio quality assesent. We provide c
 
 ## Getting started
 
-Clone the repo and install requirements:
+Clone the repo and install requirements (or better create conda environment from .yml file):
 ```bash
 git clone https://github.com/AndreevP/speech_distances.git
-pip install -r requirements.txt
+pip install -r requirements.txt 
 ```
 ## Inference
-
-We offer several metrics for audio quality evaluation, among them:
-
-- DPAM (deep perceptual audio similarity metric)
-- Frechet distributional metric
-- MMD (Maximum Mean Descrepancy) distributional metric
 
 We provide easy to use interface for distributional (Frechet distance and MMD) metrics calculation:
 
