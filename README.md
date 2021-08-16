@@ -62,18 +62,3 @@ mos_pred.calculate(path) # outputs predicted MOS
 According to our experiments these two methods for speech quality assessment have high correlation with MOS-es computed by crowd-sourced studies.
 
 
-In addition, demo notebooks for evaluation may be found in 
-```bash
-notebooks/demo_metric_*.ipynb
-```
-
-Beyond this, we offer console interface for loading numerous vocoder models and infer them on given input .wav files with further generation. This step is made for fair evaluation of vocoder models: input wavs are simplified to mel-spectrograms at the beginning, then vocoder is launched to generate waveform. 
-
-```bash
-usage: python prepare_wavs.py [--model_name MODEL_NAME] [--folder_in FOLDER_IN] [--folder_out FOLDER_OUT]
-
-arguments:
-  --model_name          name of vocoder model
-  --folder_in           name of folder with input wavs
-  --folder_out          name of folder to save output wavs
-```
