@@ -31,10 +31,12 @@ def calculate_all_metrics(path, reference_path):
                          num_runs=1, window_size=None,
                          conditional=True, use_cached=True)
     metrics["FDSD"] = FD.calculate_metric()[0].data.item()
+    FD.backbone.encoder.cpu()
     mos_pred = load_model("wave2vec_mos")
     
     moses = np.array(mos_pred.calculate(path, False))
     moses_ref = np.array(mos_pred.calculate(reference_path, False))
+    mos_pred.cpu()
     metrics["MOS_wav2vec"] = moses.mean()
     metrics["MOSdeg_wav2vec"] = np.mean(np.maximum(moses_ref - moses, 0))
     
