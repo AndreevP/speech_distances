@@ -83,7 +83,7 @@ class Wav2Vec2MOS(nn.Module):
         if self.freeze:
             self.encoder.eval()
             
-    def calculate(self, path):
+    def calculate(self, path, mean=True):
         
         pred_mos = []
         for path in tqdm.tqdm(glob.glob(f"{path}/*.wav")):
@@ -92,4 +92,7 @@ class Wav2Vec2MOS(nn.Module):
             with torch.no_grad():
                 res = self.forward(x.cuda()).mean()
             pred_mos.append(res.item())
-        return np.mean(pred_mos)
+        if mean:
+            return np.mean(pred_mos)
+        else:
+            return pred_mos
