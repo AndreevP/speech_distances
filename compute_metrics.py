@@ -66,6 +66,9 @@ def calculate_all_metrics(path, reference_path):
     for path_to_estimate_file, path_to_reference in zip(ll, ll_gt):
         x = librosa.load(path_to_estimate_file, sr=16000)[0]
         y = librosa.load(path_to_reference, sr=16000)[0]
+        x = librosa.util.normalize(x[:min(len(x), len(y))])
+        y = librosa.util.normalize(y[:min(len(x), len(y))])
+
 
         SNR.append(snr(x, y))
         LSD.append(lsd(x, y))
