@@ -38,7 +38,10 @@ def calculate_all_metrics(path, reference_path):
     moses_ref = np.array(mos_pred.calculate(reference_path, False))
     mos_pred.cpu()
     metrics["MOS_wav2vec"] = moses.mean()
+    metrics["MOS_wav2vec_std"] = moses.std()
     metrics["MOSdeg_wav2vec"] = np.mean(np.maximum(moses_ref - moses, 0))
+    metrics["MOSdeg_wav2vec_std"] = np.std(np.maximum(moses_ref - moses, 0))
+    metrics["MOSdeg_wav2vec_nonzero"] = np.sum(moses_ref - moses > 0) / len(moses.squeeze())
     
     computer = speechmetrics.load(['bsseval', 'mosnet', 'pesq', 'stoi', "sisdr"], None)
     ll = glob.glob(os.path.join(path, "*.wav"))
@@ -49,6 +52,7 @@ def calculate_all_metrics(path, reference_path):
         scores.append(computer(path_to_estimate_file, path_to_reference))
     scores = {k: [dic[k] for dic in scores] for k in scores[0]}
     metrics["MOS_orig"] = np.mean(np.stack(scores['mosnet']))
+    metrics["MOS_orig_std"] = np.std(np.stack(scores['mosnet']))
     metrics["sisdr"] = np.mean(np.stack(scores['sisdr']))
     metrics["stoi"] = np.mean(np.stack(scores['stoi']))
     metrics["pesq"] = np.mean(np.stack(scores['pesq']))
@@ -58,8 +62,10 @@ def calculate_all_metrics(path, reference_path):
     for path_to_estimate_file, path_to_reference in zip(ll, ll_gt):
         scores_ref.append(computer(path_to_reference, path_to_reference))
     scores_ref = {k: [dic[k] for dic in scores_ref] for k in scores_ref[0]}
-    metrics["MOSdeg_orig"] = np.mean(np.maximum(np.stack(scores['mosnet'])\
-                                                - np.stack(scores_ref['mosnet']), 0))
+    mosdeg = np.maximum(-np.stack(scores['mosnet']) + np.stack(scores_ref['mosnet']), 0)
+    metrics["MOSdeg_orig"] = np.mean(mosdeg)
+    metrics["MOSdeg_orig_std"] = np.std(mosdeg)
+    metrics["MOSdeg_orig_nonzero"] = np.sum(mosdeg > 0) / len(mosdeg.squeeze())
     
     LSD = []
     SNR = []
@@ -78,7 +84,7 @@ def calculate_all_metrics(path, reference_path):
     
     return metrics
 
-path = "/home/pavel/BWE_final/input_1khz" # path to .wav files to be evaluated
+path = "/home/pavel/BWE_final/input_4khz" # path to .wav files to be evaluated
 reference_path = "/home/pavel/BWE_final/gt" # path to reference .wav files
 
 print(calculate_all_metrics(path, reference_path))
