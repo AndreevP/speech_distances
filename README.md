@@ -2,8 +2,7 @@
 
 This repo contatins utilities for automatic audio quality assesent. We provide code for distributional (Frechet-style) metrics computation and direct MOS score prediction. According to our experiments these methods for speech quality assessment have high correlation with MOS-es computed by crowd-sourced studies. 
 
-Please check our [report](https://drive.google.com/file/d/1Ud6zm1KbeTOD6Y5_K5MfW3zNjhRMQO7V/view?usp=sharing) for a detailed description of this project results.
-
+WARNING: This repo is dead, check [this repo](https://github.com/AndreevP/wvmos) for wav2vec2.0 MOS score prediction. We found this metric to be a much better subjective quality predictor than Frechet Deep Speech Distance, MOSNet, PESQ, and STOI.
 
 **Keywords:** GAN-TTS, speech distances, MOS-Net, MB-Net
 
